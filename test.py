@@ -2,10 +2,12 @@ from bs4 import BeautifulSoup as soup
 from requests_html import HTMLSession
 import numpy as np
 import pandas as pd
+import logging
+import http.client
 
 
 def stockCheck():
-    stocks = pd.read_excel('/Users/willarcher/Desktop/StockAutomation/StockScraping.xlsx')
+    stocks = pd.read_excel('/Users/willarcher/Desktop/myCodingStuff/StockAutomation/StockScraping.xlsx')
     tickers = stocks['Unnamed: 6'].dropna().unique()
     tickers = tickers[tickers != 'symbol']
     for ticker in tickers:
@@ -111,19 +113,33 @@ def convertDate(date):
     else:
         print('error in converting date')
 
-def pullData(stockTicker):
-    #print('start')
+def pullData(stockTicker='Dont Have'):
+    header = {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.84 Safari/537.36'
+    }   
+    http.client.HTTPConnection.debuglevel = 1
+    logging.basicConfig()
+    logging.getLogger().setLevel(logging.DEBUG)
+    requests_log = logging.getLogger("requests.packages.urllib3")
+    requests_log.setLevel(logging.DEBUG)
+    requests_log.propagate = True
+    print('start')
     if stockTicker == 'Dont Have':
         stockTicker = input('Enter Stock Ticker:  ')
     url = f'https://finance.yahoo.com/quote/{stockTicker.upper()}/key-statistics?p={stockTicker.upper()}'
     #url = 'https://finance.yahoo.com/quote/SRE/key-statistics?p=SRE'
-
+    print('here1')
     s = HTMLSession()
-    r = s.get(url)
+    print('here2')
+    r = s.get(url, headers=header)
+    print('here3')
     r.html.render(timeout=100)
+    print('here4')
     my_html = r.html._html
+    print('here5')
     r.close()
     s.close()
+    print('here6')
     page_soup = soup(my_html, 'html.parser')
     header = page_soup.find('div', {'id': 'quote-header-info'})
     headers = header.find_all('div')
@@ -290,12 +306,18 @@ def pullData(stockTicker):
 
 
 def get_analysis(url):
+    print('here7')
     s = HTMLSession()
+    print('here8')
     r = s.get(url)
+    print('here9')
     r.html.render(timeout=100)
+    print('here10')
     my_html = r.html._html
+    print('here11')
     r.close()
     s.close()
+    print('here12')
     page_soup = soup(my_html, 'html.parser')
     body = page_soup.find('div', {'id': 'Col1-0-AnalystLeafPage-Proxy'})
     body = body.find('section')
